@@ -15,6 +15,8 @@ module Stargate
 
     def initialize(url = "http://localhost:8080", opts = {})
       @url = URI.parse(url)
+      @default_headers = {}
+
       unless @url.kind_of? URI::HTTP
         raise "invalid http url: #{url}"
       end
@@ -27,38 +29,48 @@ module Stargate
         @connection = Net::HTTP.new(@url.host, @url.port)
       end
       @connection.read_timeout = opts[:timeout] if opts[:timeout]
+
+      @default_headers['Accept-Encoding'] = 'identity' if opts.has_key?(:http_compression) && !opts[:http_compression]
     end
 
     def get(path, options = {})
-      safe_request { @connection.get(@url.path + path, {"Accept" => "application/json"}.merge(options)) }
+      headers = {"Accept" => "application/json"}.merge(@default_headers).merge(options)
+      safe_request { @connection.get(@url.path + path, headers) }
     end
 
     def get_response(path, options = {})
-      safe_response { @connection.get(@url.path + path, {"Accept" => "application/json"}.merge(options)) }
+      headers = {"Accept" => "application/json"}.merge(@default_headers).merge(options)
+      safe_response { @connection.get(@url.path + path, headers) }
     end
 
     def post(path, data = nil, options = {})
-      safe_request { @connection.post(@url.path + path, data, {'Content-Type' => 'text/xml'}.merge(options)) }
+      headers = {'Content-Type' => 'text/xml'}.merge(@default_headers).merge(options)
+      safe_request { @connection.post(@url.path + path, data, headers) }
     end
 
     def post_response(path, data = nil, options = {})
-      safe_response { @connection.post(@url.path + path, data, {'Content-Type' => 'text/xml'}.merge(options)) }
+      headers = {'Content-Type' => 'text/xml'}.merge(@default_headers).merge(options)
+      safe_response { @connection.post(@url.path + path, data, headers) }
     end
 
     def delete(path, options = {})
-      safe_request { @connection.delete(@url.path + path, options) }
+      headers = @default_headers.merge(options)
+      safe_request { @connection.delete(@url.path + path, headers) }
     end
 
     def delete_response(path, options = {})
-      safe_response { @connection.delete(@url.path + path, options) }
+      headers = @default_headers.merge(options)
+      safe_response { @connection.delete(@url.path + path, headers) }
     end
 
     def put(path, data = nil, options = {})
-      safe_request { @connection.put(@url.path + path, data, {'Content-Type' => 'text/xml'}.merge(options)) }
+      headers = {'Content-Type' => 'text/xml'}.merge(@default_headers).merge(options)
+      safe_request { @connection.put(@url.path + path, data, headers) }
     end
 
     def put_response(path, data = nil, options = {})
-      safe_response { @connection.put(@url.path + path, data, {'Content-Type' => 'text/xml'}.merge(options)) }
+      headers = {'Content-Type' => 'text/xml'}.merge(@default_headers).merge(options)
+      safe_response { @connection.put(@url.path + path, data, headers) }
     end
 
     private
